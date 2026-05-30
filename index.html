@@ -123,9 +123,9 @@
   ════════════════════════════════════════════════ -->
   <nav class="tabs">
     <button class="tab active" data-tab="crash"    onclick="switchTab('crash')">Crash</button>
-    <button class="tab"        data-tab="cvo"      onclick="switchTab('cvo')">CVO</button>
     <button class="tab"        data-tab="vehicle"  onclick="switchTab('vehicle')">Vehicle</button>
     <button class="tab"        data-tab="occupant" onclick="switchTab('occupant')">Occupant</button>
+    <button class="tab"        data-tab="cvo"      onclick="switchTab('cvo')">CVO</button>
     <button class="tab"        data-tab="special"  onclick="switchTab('special')">Special filters</button>
   </nav>
 
@@ -179,7 +179,21 @@
 
     <!-- ═══════════════ CVO TAB ══════════════════════ -->
     <section id="tab-cvo" class="tab-panel">
-      <p class="tab-desc">Crash + Vehicle + Occupant — three output files.</p>
+      <p class="tab-desc">Combined crash / vehicle / occupant templates.</p>
+
+      <div class="field">
+        <span class="section-label">Combination</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="cvoMode" value="cvo" checked onchange="cvoModeChange()">
+            Crash + Vehicle + Occupant &nbsp;<span class="chip">three output files</span></label>
+          <label class="radio-opt"><input type="radio" name="cvoMode" value="crashveh" onchange="cvoModeChange()">
+            Crash + Vehicle &nbsp;<span class="chip">two output files</span></label>
+          <label class="radio-opt"><input type="radio" name="cvoMode" value="crashocc" onchange="cvoModeChange()">
+            Crash + Occupant &nbsp;<span class="chip">two output files</span></label>
+          <label class="radio-opt"><input type="radio" name="cvoMode" value="vehocc" onchange="cvoModeChange()">
+            Vehicle + Occupant &nbsp;<span class="chip">two output files</span></label>
+        </div>
+      </div>
 
       <div class="field">
         <span class="section-label">Pull method</span>
@@ -191,7 +205,7 @@
         </div>
       </div>
 
-      <div id="cvoFilterSection" class="field filter-section">
+      <div id="cvoCrashFilterSection" class="field filter-section">
         <span class="section-label">Filter <span class="note">(No-pull only)</span></span>
         <select id="cvoFilter" onchange="cvoFilterChange()">
           <option value="none">No filter — all crashes in year range</option>
@@ -215,6 +229,30 @@
         </div>
       </div>
 
+      <div id="cvoOccFilterSection" class="field filter-section" style="display:none;">
+        <span class="section-label">Filter <span class="note">(Vehicle + Occupant only — no-pull)</span></span>
+        <select id="cvoOccFilter" onchange="cvoOccFilterChange()">
+          <option value="none">No filter — all occupants in year range</option>
+          <option value="county">Filter by county codes</option>
+          <option value="city">Filter by city codes</option>
+          <option value="custom">Custom WHERE clause</option>
+        </select>
+        <div id="cvoOccFilterInput" class="filter-input-row" style="display:none;">
+          <label id="cvoOccFilterLabel"></label>
+          <input type="text" id="cvoOccFilterVal" placeholder="" style="display:none;">
+          <div id="cvoOccPicker" class="lookup-picker" style="display:none;">
+            <div class="picker-search-wrap">
+              <input type="text" id="cvoOccPickerSearch" class="picker-search"
+                     placeholder="Type name or code…" autocomplete="off"
+                     oninput="pickerSearch('cvoOcc')"
+                     onblur="setTimeout(()=>{ document.getElementById('cvoOccPickerDropdown').style.display='none'; },150)">
+              <div id="cvoOccPickerDropdown" class="picker-dropdown"></div>
+            </div>
+            <div id="cvoOccPickerTags" class="picker-tags"></div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn btn-primary" onclick="generate('cvo')">&#9654; Generate SAS code</button>
     </section>
 
@@ -227,12 +265,8 @@
         <div class="radio-col">
           <label class="radio-opt"><input type="radio" name="vehType" value="standard" checked onchange="vehTypeChange()">
             Standard vehicle query (No pull)</label>
-          <label class="radio-opt"><input type="radio" name="vehType" value="vehOcc" onchange="vehTypeChange()">
-            Vehicle + Occupant &nbsp;<span class="chip">two output files</span></label>
           <label class="radio-opt"><input type="radio" name="vehType" value="bodyquery" onchange="vehTypeChange()">
             Filter by body style + county &nbsp;<span class="chip">Vehicle Query template</span></label>
-          <label class="radio-opt"><input type="radio" name="vehType" value="pulldbf" onchange="vehTypeChange()">
-            Crash + Vehicle from DBF pull</label>
         </div>
       </div>
 
@@ -283,8 +317,6 @@
         <div class="radio-col">
           <label class="radio-opt"><input type="radio" name="occType" value="standard" checked onchange="occTypeChange()">
             Occupant only (No pull)</label>
-          <label class="radio-opt"><input type="radio" name="occType" value="withVeh" onchange="occTypeChange()">
-            Vehicle + Occupant &nbsp;<span class="chip">two output files · No pull</span></label>
         </div>
       </div>
 

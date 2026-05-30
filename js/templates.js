@@ -61,10 +61,68 @@ function generateCrash() {
 
 
 /* ═══════════════════════════════════════════════════════════
-   CVO — CRASH + VEHICLE + OCCUPANT  (three output files)
-   Template variants: NoPull / Pull GRP-CSV
+   CVO COMBINATIONS
+   Crash + Vehicle + Occupant / Crash + Vehicle / Crash + Occupant / Vehicle + Occupant
 ═══════════════════════════════════════════════════════════ */
 function generateCVO() {
+  const mode = document.querySelector('[name=cvoMode]:checked').value;
+  if (mode === 'crashveh') return generateCrashVehicleCombo();
+  if (mode === 'crashocc') return generateCrashOccupantCombo();
+  if (mode === 'vehocc')   return generateVehicleOccupantCombo();
+  return generateCrashVehicleOccupantCombo();
+}
+
+function appendCrashComboBlock(L, cfg, pullMethod, whereArg, customCrashMacros) {
+  if (pullMethod === 'nopull') {
+    L.push('%my(crash, l=crash, y=' + cfg.yRange + whereArg + ');');
+    L.push('proc sort data=crash; by ucrnumber year; run;');
+  } else {
+    L.push('/* Step 2: Merge crash data */');
+    loadDS(L, { name: 'crash', lib: 'crash', finalSort: 'ucrnumber year',
+                pullMethod, yRange: cfg.yRange, whereArg: '' });
+  }
+  L.push('');
+  fmtDS(L, 'crash', 'crash', cfg.reviewLinks ? 'yes' : 'no', customCrashMacros);
+  L.push('');
+  expDS(L, { name: 'crash', suffix: 'CrashData',
+             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+}
+
+function appendVehicleComboBlock(L, cfg, pullMethod, whereArg) {
+  L.push('');
+  L.push('/* ─── Vehicle ──────────────────────────────────────── */');
+  if (pullMethod === 'nopull') {
+    L.push('%my(veh, l=veh, y=' + cfg.yRange + whereArg + ');');
+    L.push('proc sort data=veh; by ucrnumber year vehno; run;');
+  } else {
+    loadDS(L, { name: 'veh', lib: 'veh', finalSort: 'ucrnumber year vehno',
+                pullMethod, yRange: cfg.yRange, whereArg: '' });
+  }
+  L.push('');
+  fmtDS(L, 'veh', 'vehicle');
+  L.push('');
+  expDS(L, { name: 'veh', suffix: 'VehData',
+             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+}
+
+function appendOccupantComboBlock(L, cfg, pullMethod, whereArg) {
+  L.push('');
+  L.push('/* ─── Occupant ─────────────────────────────────────── */');
+  if (pullMethod === 'nopull') {
+    L.push('%my(occ, l=occ, y=' + cfg.yRange + whereArg + ');');
+    L.push('proc sort data=occ; by ucrnumber year vehno occno; run;');
+  } else {
+    loadDS(L, { name: 'occ', lib: 'occ', finalSort: 'ucrnumber year vehno occno',
+                pullMethod, yRange: cfg.yRange, whereArg: '' });
+  }
+  L.push('');
+  fmtDS(L, 'occ', 'occupant');
+  L.push('');
+  expDS(L, { name: 'occ', suffix: 'OccData',
+             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+}
+
+function generateCrashVehicleOccupantCombo() {
   const cfg        = getConfig();
   const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
   const pullMethod = document.querySelector('[name=cvoPull]:checked').value;
@@ -82,52 +140,80 @@ function generateCVO() {
     importBlock(L, { pullMethod: 'grpcsv', folder: cfg.folder, dr: cfg.dr, hasGRP: true });
   }
 
-  // ── Crash ──────────────────────────────────────────────
-  if (pullMethod === 'nopull') {
-    L.push('%my(crash, l=crash, y=' + cfg.yRange + whereArg + ');');
-    L.push('proc sort data=crash; by ucrnumber year; run;');
-  } else {
-    L.push('/* Step 2: Merge crash data */');
-    loadDS(L, { name: 'crash', lib: 'crash', finalSort: 'ucrnumber year',
-                pullMethod, yRange: cfg.yRange, whereArg: '' });
-  }
-  L.push('');
-  fmtDS(L, 'crash', 'crash', cfg.reviewLinks ? 'yes' : 'no', customCrashMacros);
-  L.push('');
-  expDS(L, { name: 'crash', suffix: 'CrashData',
-             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+  appendCrashComboBlock(L, cfg, pullMethod, whereArg, customCrashMacros);
+  appendVehicleComboBlock(L, cfg, pullMethod, whereArg);
+  appendOccupantComboBlock(L, cfg, pullMethod, whereArg);
 
-  // ── Vehicle ────────────────────────────────────────────
-  L.push('');
-  L.push('/* ─── Vehicle ──────────────────────────────────────── */');
-  if (pullMethod === 'nopull') {
-    L.push('%my(veh, l=veh, y=' + cfg.yRange + whereArg + ');');
-    L.push('proc sort data=veh; by ucrnumber year vehno; run;');
-  } else {
-    loadDS(L, { name: 'veh', lib: 'veh', finalSort: 'ucrnumber year vehno',
-                pullMethod, yRange: cfg.yRange, whereArg: '' });
-  }
-  L.push('');
-  fmtDS(L, 'veh', 'vehicle');
-  L.push('');
-  expDS(L, { name: 'veh', suffix: 'VehData',
-             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+  return L.join('\n');
+}
 
-  // ── Occupant ───────────────────────────────────────────
+function generateCrashVehicleCombo() {
+  const cfg        = getConfig();
+  const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
+  const pullMethod = document.querySelector('[name=cvoPull]:checked').value;
+  const filterType = document.getElementById('cvoFilter').value;
+  const filterVal  = getFilterValue('cvo');
+  const whereArg   = (pullMethod === 'nopull') ? buildWhere(filterType, filterVal, cfg.dateWhere) : '';
+  const isGRP      = pullMethod === 'grpcsv';
+  const L = [];
+
+  addHeader(L, cfg.dr, isGRP ? 'Crash + Vehicle — Pull GRP-CSV' : 'Crash + Vehicle — No Pull');
+  L.push("%include '" + cfg.macroPath + "';");
   L.push('');
-  L.push('/* ─── Occupant ─────────────────────────────────────── */');
-  if (pullMethod === 'nopull') {
-    L.push('%my(occ, l=occ, y=' + cfg.yRange + whereArg + ');');
-    L.push('proc sort data=occ; by ucrnumber year vehno occno; run;');
-  } else {
-    loadDS(L, { name: 'occ', lib: 'occ', finalSort: 'ucrnumber year vehno occno',
-                pullMethod, yRange: cfg.yRange, whereArg: '' });
+
+  if (isGRP) {
+    importBlock(L, { pullMethod: 'grpcsv', folder: cfg.folder, dr: cfg.dr, hasGRP: true });
   }
+
+  appendCrashComboBlock(L, cfg, pullMethod, whereArg, customCrashMacros);
+  appendVehicleComboBlock(L, cfg, pullMethod, whereArg);
+
+  return L.join('\n');
+}
+
+function generateCrashOccupantCombo() {
+  const cfg        = getConfig();
+  const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
+  const pullMethod = document.querySelector('[name=cvoPull]:checked').value;
+  const filterType = document.getElementById('cvoFilter').value;
+  const filterVal  = getFilterValue('cvo');
+  const whereArg   = (pullMethod === 'nopull') ? buildWhere(filterType, filterVal, cfg.dateWhere) : '';
+  const isGRP      = pullMethod === 'grpcsv';
+  const L = [];
+
+  addHeader(L, cfg.dr, isGRP ? 'Crash + Occupant — Pull GRP-CSV' : 'Crash + Occupant — No Pull');
+  L.push("%include '" + cfg.macroPath + "';");
   L.push('');
-  fmtDS(L, 'occ', 'occupant');
+
+  if (isGRP) {
+    importBlock(L, { pullMethod: 'grpcsv', folder: cfg.folder, dr: cfg.dr, hasGRP: true });
+  }
+
+  appendCrashComboBlock(L, cfg, pullMethod, whereArg, customCrashMacros);
+  appendOccupantComboBlock(L, cfg, pullMethod, whereArg);
+
+  return L.join('\n');
+}
+
+function generateVehicleOccupantCombo() {
+  const cfg        = getConfig();
+  const pullMethod = document.querySelector('[name=cvoPull]:checked').value;
+  const filterType = document.getElementById('cvoOccFilter').value;
+  const filterVal  = getFilterValue('cvoOcc');
+  const whereArg   = (pullMethod === 'nopull') ? buildWhere(filterType, filterVal, cfg.dateWhere) : '';
+  const isGRP      = pullMethod === 'grpcsv';
+  const L = [];
+
+  addHeader(L, cfg.dr, isGRP ? 'Vehicle + Occupant — Pull GRP-CSV' : 'Vehicle + Occupant — No Pull');
+  L.push("%include '" + cfg.macroPath + "';");
   L.push('');
-  expDS(L, { name: 'occ', suffix: 'OccData',
-             folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
+
+  if (isGRP) {
+    importBlock(L, { pullMethod: 'grpcsv', folder: cfg.folder, dr: cfg.dr, hasGRP: true });
+  }
+
+  appendVehicleComboBlock(L, cfg, pullMethod, whereArg);
+  appendOccupantComboBlock(L, cfg, pullMethod, whereArg);
 
   return L.join('\n');
 }
@@ -141,34 +227,6 @@ function generateVehicle() {
   const cfg     = getConfig();
   const vehType = document.querySelector('[name=vehType]:checked').value;
   const L = [];
-
-  /* ── Vehicle + Occupant ───────────────────────────────── */
-  if (vehType === 'vehOcc') {
-    const filterType = document.getElementById('vehFilter').value;
-    const filterVal  = getFilterValue('veh');
-    const whereArg   = buildWhere(filterType, filterVal, cfg.dateWhere);
-
-    addHeader(L, cfg.dr, 'Vehicle + Occupant — No Pull');
-    L.push("%include '" + cfg.macroPath + "';");
-    L.push('');
-    L.push('%my(veh, l=veh, y=' + cfg.yRange + whereArg + ');');
-    L.push('proc sort data=veh; by ucrnumber year vehno; run;');
-    L.push('');
-    fmtDS(L, 'veh', 'vehicle');
-    L.push('');
-    expDS(L, { name: 'veh', suffix: 'VehData',
-               folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
-    L.push('');
-    L.push('/* ─── Occupant ─────────────────────────────────────── */');
-    L.push('%my(occ, l=occ, y=' + cfg.yRange + whereArg + ');');
-    L.push('proc sort data=occ; by ucrnumber year vehno occno; run;');
-    L.push('');
-    fmtDS(L, 'occ', 'occupant');
-    L.push('');
-    expDS(L, { name: 'occ', suffix: 'OccData',
-               folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
-    return L.join('\n');
-  }
 
   /* ── Body style + county filter query ─────────────────── */
   if (vehType === 'bodyquery') {
@@ -192,32 +250,6 @@ function generateVehicle() {
     }
     L.push('run;');
     L.push('proc sort data=veh; by ucrnumber year vehno; run;');
-    L.push('');
-    fmtDS(L, 'veh', 'vehicle');
-    L.push('');
-    expDS(L, { name: 'veh', suffix: 'VehData',
-               folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
-
-  /* ── Crash + Vehicle from DBF pull ────────────────────── */
-  } else if (vehType === 'pulldbf') {
-    addHeader(L, cfg.dr, 'Crash + Vehicle — Pull DBF');
-    L.push("%include '" + cfg.macroPath + "';");
-    L.push('');
-    importBlock(L, { pullMethod: 'dbf', folder: cfg.folder, dr: cfg.dr, hasGRP: false });
-
-    L.push('/* Step 2: Merge crash data */');
-    loadDS(L, { name: 'crash', lib: 'crash', finalSort: 'ucrnumber year',
-                pullMethod: 'dbf', yRange: cfg.yRange, whereArg: '' });
-    L.push('');
-    fmtDS(L, 'crash', 'crash', cfg.reviewLinks ? 'yes' : 'no', customCrashMacros);
-    L.push('');
-    expDS(L, { name: 'crash', suffix: 'CrashData',
-               folder: cfg.folder, dr: cfg.dr, ext: cfg.ext, dbms: cfg.dbms });
-
-    L.push('');
-    L.push('/* ─── Vehicle ──────────────────────────────────────── */');
-    loadDS(L, { name: 'veh', lib: 'veh', finalSort: 'ucrnumber year vehno',
-                pullMethod: 'dbf', yRange: cfg.yRange, whereArg: '' });
     L.push('');
     fmtDS(L, 'veh', 'vehicle');
     L.push('');

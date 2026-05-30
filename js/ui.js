@@ -168,10 +168,29 @@ function crashFilterChange() { toggleFilterInput('crash'); }
    CVO TAB
 ═══════════════════════════════════════════════════════════ */
 function cvoPullChange() {
-  const pm = document.querySelector('[name=cvoPull]:checked').value;
-  toggleSection('cvoFilterSection', pm === 'nopull');
+  updateCvoSections();
 }
+function cvoModeChange() { updateCvoSections(); }
 function cvoFilterChange() { toggleFilterInput('cvo'); }
+function cvoOccFilterChange() { toggleFilterInput('cvoOcc'); }
+
+function updateCvoSections() {
+  const mode = document.querySelector('[name=cvoMode]:checked').value;
+  const pm   = document.querySelector('[name=cvoPull]:checked').value;
+  const crashSection = document.getElementById('cvoCrashFilterSection');
+  const occSection   = document.getElementById('cvoOccFilterSection');
+
+  if (crashSection) crashSection.style.display = mode === 'vehocc' ? 'none' : 'block';
+  if (occSection)   occSection.style.display   = mode === 'vehocc' ? 'block' : 'none';
+
+  if (mode === 'vehocc') {
+    toggleSection('cvoOccFilterSection', pm === 'nopull');
+    toggleFilterInput('cvoOcc');
+  } else {
+    toggleSection('cvoCrashFilterSection', pm === 'nopull');
+    toggleFilterInput('cvo');
+  }
+}
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -180,7 +199,7 @@ function cvoFilterChange() { toggleFilterInput('cvo'); }
 function vehTypeChange() {
   const t = document.querySelector('[name=vehType]:checked').value;
   document.getElementById('vehBodySection').style.display = t === 'bodyquery' ? 'block' : 'none';
-  toggleSection('vehStandardFilter', t === 'standard' || t === 'vehOcc');
+  toggleSection('vehStandardFilter', t === 'standard');
 }
 function vehFilterChange() { toggleFilterInput('veh'); }
 
@@ -217,16 +236,19 @@ function generate(type) {
     if (type === 'crash') {
       code = generateCrash(); badge = '1 output file';
     } else if (type === 'cvo') {
+      const mode = document.querySelector('[name=cvoMode]:checked').value;
       code = generateCVO(); badge = '3 output files (Crash, Vehicle, Occupant)';
+      badge = mode === 'crashveh' ? '2 output files (Crash, Vehicle)'
+            : mode === 'crashocc' ? '2 output files (Crash, Occupant)'
+            : mode === 'vehocc'   ? '2 output files (Vehicle, Occupant)'
+            : '3 output files (Crash, Vehicle, Occupant)';
     } else if (type === 'vehicle') {
-      const vt = document.querySelector('[name=vehType]:checked').value;
       code  = generateVehicle();
-      badge = vt === 'pulldbf' ? '2 output files (Crash, Vehicle)'
-            : vt === 'vehOcc'  ? '2 output files (Vehicle, Occupant)' : '1 output file';
+      badge = '1 output file';
     } else if (type === 'occupant') {
       const ot = document.querySelector('[name=occType]:checked').value;
-      code  = ot === 'withVeh' ? generateVehicleOccupant() : generateOccupant();
-      badge = ot === 'withVeh' ? '2 output files (Vehicle, Occupant)' : '1 output file';
+      code  = generateOccupant();
+      badge = '1 output file';
     } else if (type === 'special') {
       code  = generateSpecial();
       badge = document.querySelector('[name=specialType]:checked').value === 'motorcycles'
