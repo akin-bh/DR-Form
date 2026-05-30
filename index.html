@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Request Form (SAS Code Generator)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app site-shell">
+
+  <header class="site-header">
+    <div class="site-brand">
+      <a href="https://gps.unm.edu/" target="_blank" class="site-logo-link">
+        <img src="Documents/gps-logo-white.png" alt="Geospatial and Population Studies" class="site-logo">
+      </a>
+      <div class="site-brand-copy">
+        <h1>Data Request Form</h1>
+        <p class="site-summary">SAS Code Generator</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       COMMON CONFIG — shown on every tab
+       Edit: index.html (add fields here)
+             styles.css (change layout)
+  ════════════════════════════════════════════════ -->
+  <section class="config-bar">
+    <div class="config-grid">
+      <div class="field">
+        <label>DR number</label>
+        <input type="text" id="drNum" placeholder="e.g. 2847">
+      </div>
+      <div class="field">
+        <label>Output folder path</label>
+        <input type="text" id="drFolder" placeholder="R:\DR-2847-Smith">
+      </div>
+      <div class="field">
+        <label>Year range</label>
+        <div class="year-inputs">
+          <input type="number" id="yearStart" placeholder="2020" min="1990" max="2099">
+          <span class="dash">–</span>
+          <input type="number" id="yearEnd" placeholder="2024" min="1990" max="2099">
+        </div>
+        <div class="date-toggle-row">
+          <label class="checkbox-opt">
+            <input type="checkbox" id="useDateRange" onchange="toggleDateRange()">
+            Add specific month/day dates
+          </label>
+          <p class="date-help">Optional month/day range.</p>
+        </div>
+        <div id="dateRangeExtras" style="display:none;" class="date-extras">
+          <div class="date-range-grid">
+            <div class="date-range-card">
+              <span class="date-extra-lbl">Start</span>
+              <div class="date-inline-controls">
+                <select id="monthStart" class="date-sel">
+                  <option value="">Month</option>
+                  <option value="1">January</option><option value="2">February</option>
+                  <option value="3">March</option><option value="4">April</option>
+                  <option value="5">May</option><option value="6">June</option>
+                  <option value="7">July</option><option value="8">August</option>
+                  <option value="9">September</option><option value="10">October</option>
+                  <option value="11">November</option><option value="12">December</option>
+                </select>
+                <input type="number" id="dayStart" class="date-day" min="1" max="31" placeholder="Day">
+              </div>
+              <span class="date-extra-hint">Uses the start year</span>
+            </div>
+            <div class="date-range-card">
+              <span class="date-extra-lbl">End</span>
+              <div class="date-inline-controls">
+                <select id="monthEnd" class="date-sel">
+                  <option value="">Month</option>
+                  <option value="1">January</option><option value="2">February</option>
+                  <option value="3">March</option><option value="4">April</option>
+                  <option value="5">May</option><option value="6">June</option>
+                  <option value="7">July</option><option value="8">August</option>
+                  <option value="9">September</option><option value="10">October</option>
+                  <option value="11">November</option><option value="12">December</option>
+                </select>
+                <input type="number" id="dayEnd" class="date-day" min="1" max="31" placeholder="Day">
+              </div>
+              <span class="date-extra-hint">Uses the end year</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Output format</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="outFmt" value="csv" checked> CSV</label>
+          <label class="radio-opt"><input type="radio" name="outFmt" value="xlsx"> Excel (.xlsx)</label>
+        </div>
+      </div>
+
+    </div>
+    <details class="advanced">
+      <summary>&#9881; Macro file</summary>
+      <div class="field adv-field">
+        <label>Select macro file</label>
+        <select id="macroPreset" onchange="macroPresetChange()">
+          <option value="standard">DR_Data_Macros.sas &mdash; standard (%link_appendloc for crash reports)</option>
+          <option value="noreview">No review needed (%NoReviewNeeded_macro)</option>
+          <option value="custom">Custom path&hellip;</option>
+        </select>
+        <input type="text" id="macroPath" value="A:\TRUAnalysis\request\Templates\Templates_SAS\DR_Data_Macros.sas" style="margin-top:6px;">
+        <p class="hint" id="macroHint">Standard macro file — crash data will include <code>%link_appendloc;</code> to build the Links field.</p>
+        <div id="customMacroSection" style="display:none; margin-top:10px;">
+          <label>Optional custom crash macros</label>
+          <textarea id="customMacroLines" rows="3" placeholder="drop %crash_drop_macro;\n%link_appendloc;"></textarea>
+          <p class="hint">Shown only for Custom path. Enter SAS macro lines to insert into crash data steps.</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       TABS — one per request category
+       To add a new tab: add a <button> here AND a
+       matching <section id="tab-YOURNAME"> below
+  ════════════════════════════════════════════════ -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="crash"    onclick="switchTab('crash')">Crash</button>
+    <button class="tab"        data-tab="cvo"      onclick="switchTab('cvo')">CVO</button>
+    <button class="tab"        data-tab="vehicle"  onclick="switchTab('vehicle')">Vehicle</button>
+    <button class="tab"        data-tab="occupant" onclick="switchTab('occupant')">Occupant</button>
+    <button class="tab"        data-tab="special"  onclick="switchTab('special')">Special filters</button>
+  </nav>
+
+  <main class="tab-content">
+
+    <!-- ═══════════════ CRASH TAB ═══════════════════ -->
+    <section id="tab-crash" class="tab-panel active">
+      <p class="tab-desc">Crash-level data only. One output file.</p>
+
+      <div class="field">
+        <span class="section-label">Pull method</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="crashPull" value="nopull" checked onchange="crashPullChange()">
+            No pull — direct query by year and optional filter</label>
+          <label class="radio-opt"><input type="radio" name="crashPull" value="csv" onchange="crashPullChange()">
+            Pull from CSV list &nbsp;<span class="chip">UCRnumber + Year</span></label>
+          <label class="radio-opt"><input type="radio" name="crashPull" value="dbf" onchange="crashPullChange()">
+            Pull from DBF list</label>
+          <label class="radio-opt"><input type="radio" name="crashPull" value="grpcsv" onchange="crashPullChange()">
+            Pull from GRP-CSV &nbsp;<span class="chip">UCRnumber + Year + GRP group</span></label>
+        </div>
+      </div>
+
+      <div id="crashFilterSection" class="field filter-section">
+        <span class="section-label">Filter <span class="note">(No-pull only — disabled for pull methods)</span></span>
+        <select id="crashFilter" onchange="crashFilterChange()">
+          <option value="none">No filter — all crashes in year range</option>
+          <option value="county">Filter by county codes</option>
+          <option value="city">Filter by city codes</option>
+          <option value="animals">All animals involved (class=9 or fhe=82)</option>
+          <option value="custom">Custom WHERE clause</option>
+        </select>
+        <div id="crashFilterInput" class="filter-input-row" style="display:none;">
+          <label id="crashFilterLabel"></label>
+          <input type="text" id="crashFilterVal" placeholder="" style="display:none;">
+          <div id="crashPicker" class="lookup-picker" style="display:none;">
+            <div class="picker-search-wrap">
+              <input type="text" id="crashPickerSearch" class="picker-search"
+                     placeholder="Type name or code…" autocomplete="off"
+                     oninput="pickerSearch('crash')"
+                     onblur="setTimeout(()=>{ document.getElementById('crashPickerDropdown').style.display='none'; },150)">
+              <div id="crashPickerDropdown" class="picker-dropdown"></div>
+            </div>
+            <div id="crashPickerTags" class="picker-tags"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generate('crash')">&#9654; Generate SAS code</button>
+    </section>
+
+    <!-- ═══════════════ CVO TAB ══════════════════════ -->
+    <section id="tab-cvo" class="tab-panel">
+      <p class="tab-desc">Crash + Vehicle + Occupant — three output files.</p>
+
+      <div class="field">
+        <span class="section-label">Pull method</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="cvoPull" value="nopull" checked onchange="cvoPullChange()">
+            No pull — direct query by year and optional filter</label>
+          <label class="radio-opt"><input type="radio" name="cvoPull" value="grpcsv" onchange="cvoPullChange()">
+            Pull from GRP-CSV &nbsp;<span class="chip">UCRnumber + Year + GRP</span></label>
+        </div>
+      </div>
+
+      <div id="cvoFilterSection" class="field filter-section">
+        <span class="section-label">Filter <span class="note">(No-pull only)</span></span>
+        <select id="cvoFilter" onchange="cvoFilterChange()">
+          <option value="none">No filter — all crashes in year range</option>
+          <option value="county">Filter by county codes</option>
+          <option value="city">Filter by city codes</option>
+          <option value="custom">Custom WHERE clause</option>
+        </select>
+        <div id="cvoFilterInput" class="filter-input-row" style="display:none;">
+          <label id="cvoFilterLabel"></label>
+          <input type="text" id="cvoFilterVal" placeholder="" style="display:none;">
+          <div id="cvoPicker" class="lookup-picker" style="display:none;">
+            <div class="picker-search-wrap">
+              <input type="text" id="cvoPickerSearch" class="picker-search"
+                     placeholder="Type name or code…" autocomplete="off"
+                     oninput="pickerSearch('cvo')"
+                     onblur="setTimeout(()=>{ document.getElementById('cvoPickerDropdown').style.display='none'; },150)">
+              <div id="cvoPickerDropdown" class="picker-dropdown"></div>
+            </div>
+            <div id="cvoPickerTags" class="picker-tags"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generate('cvo')">&#9654; Generate SAS code</button>
+    </section>
+
+    <!-- ═══════════════ VEHICLE TAB ══════════════════ -->
+    <section id="tab-vehicle" class="tab-panel">
+      <p class="tab-desc">Vehicle-level data. Choose query type below.</p>
+
+      <div class="field">
+        <span class="section-label">Query type</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="vehType" value="standard" checked onchange="vehTypeChange()">
+            Standard vehicle query (No pull)</label>
+          <label class="radio-opt"><input type="radio" name="vehType" value="vehOcc" onchange="vehTypeChange()">
+            Vehicle + Occupant &nbsp;<span class="chip">two output files</span></label>
+          <label class="radio-opt"><input type="radio" name="vehType" value="bodyquery" onchange="vehTypeChange()">
+            Filter by body style + county &nbsp;<span class="chip">Vehicle Query template</span></label>
+          <label class="radio-opt"><input type="radio" name="vehType" value="pulldbf" onchange="vehTypeChange()">
+            Crash + Vehicle from DBF pull</label>
+        </div>
+      </div>
+
+      <div id="vehBodySection" style="display:none;">
+        <div class="field">
+          <span class="section-label">Body style codes <span class="note">(space or comma separated)</span></span>
+          <input type="text" id="vehBodyStyles" value="MT T2 T3 TB TD TH TS TX TU UH" placeholder="MT T2 T3 TB">
+        </div>
+        <div class="field">
+          <span class="section-label">County codes <span class="note">(leave blank to skip county filter)</span></span>
+          <input type="text" id="vehCountyCodes" placeholder="9 14">
+        </div>
+      </div>
+
+      <div id="vehStandardFilter" class="field filter-section">
+        <span class="section-label">Filter <span class="note">(Standard No-pull only)</span></span>
+        <select id="vehFilter" onchange="vehFilterChange()">
+          <option value="none">No filter — all vehicles in year range</option>
+          <option value="county">Filter by county codes</option>
+          <option value="city">Filter by city codes</option>
+          <option value="custom">Custom WHERE clause</option>
+        </select>
+        <div id="vehFilterInput" class="filter-input-row" style="display:none;">
+          <label id="vehFilterLabel"></label>
+          <input type="text" id="vehFilterVal" placeholder="" style="display:none;">
+          <div id="vehPicker" class="lookup-picker" style="display:none;">
+            <div class="picker-search-wrap">
+              <input type="text" id="vehPickerSearch" class="picker-search"
+                     placeholder="Type name or code…" autocomplete="off"
+                     oninput="pickerSearch('veh')"
+                     onblur="setTimeout(()=>{ document.getElementById('vehPickerDropdown').style.display='none'; },150)">
+              <div id="vehPickerDropdown" class="picker-dropdown"></div>
+            </div>
+            <div id="vehPickerTags" class="picker-tags"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generate('vehicle')">&#9654; Generate SAS code</button>
+    </section>
+
+    <!-- ═══════════════ OCCUPANT TAB ════════════════ -->
+    <section id="tab-occupant" class="tab-panel">
+      <p class="tab-desc">Occupant-level data. Choose between standalone or combined with vehicle.</p>
+
+      <div class="field">
+        <span class="section-label">Query type</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="occType" value="standard" checked onchange="occTypeChange()">
+            Occupant only (No pull)</label>
+          <label class="radio-opt"><input type="radio" name="occType" value="withVeh" onchange="occTypeChange()">
+            Vehicle + Occupant &nbsp;<span class="chip">two output files · No pull</span></label>
+        </div>
+      </div>
+
+      <div id="occFilterSection" class="field filter-section">
+        <span class="section-label">Filter</span>
+        <select id="occFilter" onchange="occFilterChange()">
+          <option value="none">No filter — all occupants in year range</option>
+          <option value="county">Filter by county codes</option>
+          <option value="city">Filter by city codes</option>
+          <option value="custom">Custom WHERE clause</option>
+        </select>
+        <div id="occFilterInput" class="filter-input-row" style="display:none;">
+          <label id="occFilterLabel"></label>
+          <input type="text" id="occFilterVal" placeholder="" style="display:none;">
+          <div id="occPicker" class="lookup-picker" style="display:none;">
+            <div class="picker-search-wrap">
+              <input type="text" id="occPickerSearch" class="picker-search"
+                     placeholder="Type name or code…" autocomplete="off"
+                     oninput="pickerSearch('occ')"
+                     onblur="setTimeout(()=>{ document.getElementById('occPickerDropdown').style.display='none'; },150)">
+              <div id="occPickerDropdown" class="picker-dropdown"></div>
+            </div>
+            <div id="occPickerTags" class="picker-tags"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generate('occupant')">&#9654; Generate SAS code</button>
+    </section>
+
+    <!-- ═══════════════ SPECIAL TAB ══════════════════ -->
+    <section id="tab-special" class="tab-panel">
+      <p class="tab-desc">Pre-built templates for common specialized requests.</p>
+
+      <div class="field">
+        <span class="section-label">Template</span>
+        <div class="radio-col">
+          <label class="radio-opt"><input type="radio" name="specialType" value="motorcycles" checked onchange="specialTypeChange()">
+            Motorcycles only &nbsp;<span class="chip">CVO · MC/MP body style filter · removes ATVs</span></label>
+          <label class="radio-opt"><input type="radio" name="specialType" value="animals" onchange="specialTypeChange()">
+            All animals involved &nbsp;<span class="chip">class=9 or fhe=82</span></label>
+          <label class="radio-opt"><input type="radio" name="specialType" value="findroads" onchange="specialTypeChange()">
+            Find roads by street name/number &nbsp;<span class="chip">searches AStreet, BStreet, Landmark, GIS_Route</span></label>
+          <label class="radio-opt"><input type="radio" name="specialType" value="quickucr" onchange="specialTypeChange()">
+            Get specific UCR numbers quick</label>
+        </div>
+      </div>
+
+      <div id="findRoadsSection" style="display:none;">
+        <div class="field">
+          <span class="section-label">County code <span class="note">(optional — leave blank to search all counties)</span></span>
+          <input type="text" id="roadCounty" placeholder="25">
+        </div>
+        <div class="field">
+          <span class="section-label">Search terms <span class="note">(one per line · automatically uppercased)</span></span>
+          <textarea id="roadTerms" rows="4" placeholder="CENTRAL AVE&#10;NM 528&#10;7786"></textarea>
+        </div>
+      </div>
+
+      <div id="quickUCRSection" style="display:none;">
+        <div class="field">
+          <span class="section-label">UCR numbers <span class="note">(one per line)</span></span>
+          <textarea id="quickUCRs" rows="4" placeholder="710808532&#10;710809100&#10;710810250"></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generate('special')">&#9654; Generate SAS code</button>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════
+       OUTPUT — generated code and action buttons
+  ════════════════════════════════════════════════ -->
+  <section id="outputSection" style="display:none;" class="output-section">
+    <div class="output-header">
+      <span class="output-title">Generated SAS code &mdash; ready to paste into SAS</span>
+      <span class="output-badge" id="outputBadge"></span>
+      <div class="output-actions">
+        <button class="btn" onclick="copyCode()">&#128203; Copy to clipboard</button>
+        <button class="btn" onclick="downloadCode()">&#8595; Download as .sas file</button>
+      </div>
+    </div>
+    <pre id="codeOutput"></pre>
+  </section>
+
+</div>
+
+<!-- Load JS files in order: lookups → helpers → templates → ui -->
+<script src="js/lookups.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
