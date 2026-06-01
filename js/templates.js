@@ -1,5 +1,5 @@
 /*
- * js/templates.js — SAS code generator for each template type
+ * js/templates.js : SAS code generator for each template type
  * =============================================================
  * THIS IS THE MAIN FILE TO EDIT when:
  *   - Adding a new template type          → add a new function at the bottom
@@ -28,10 +28,10 @@ function generateCrash() {
   const isGRP      = pullMethod === 'grpcsv';
 
   const templateName =
-    pullMethod === 'nopull' ? 'Crash — No Pull' :
-    pullMethod === 'csv'    ? 'Crash — Pull CSV' :
-    pullMethod === 'dbf'    ? 'Crash — Pull DBF' :
-                              'Crash — Pull GRP-CSV';
+    pullMethod === 'nopull' ? 'Crash : No Pull' :
+    pullMethod === 'csv'    ? 'Crash : Pull CSV' :
+    pullMethod === 'dbf'    ? 'Crash : Pull DBF' :
+                              'Crash : Pull GRP-CSV';
   const L = [];
 
   addHeader(L, cfg.dr, templateName);
@@ -44,8 +44,8 @@ function generateCrash() {
     L.push('%my(crash, l=crash, y=' + cfg.yRange + whereArg + ');');
     L.push('proc sort data=crash; by ucrnumber year; run;');
   } else {
-    if (isGRP) L.push('/* Step 2: Merge crash data — GRP column is carried through */');
-    else       L.push('/* Step 2: Merge crash data with import list */');
+    if (isGRP) L.push('/* Step 2: Merge crash data : GRP column is carried through */');
+    else       L.push('/* Step 2: Merge crash data : with import list */');
     loadDS(L, { name: 'crash', lib: 'crash', finalSort: 'ucrnumber year',
                 pullMethod, yRange: cfg.yRange, whereArg: '' });
   }
@@ -132,7 +132,7 @@ function generateCrashVehicleOccupantCombo() {
   const isGRP      = pullMethod === 'grpcsv';
   const L = [];
 
-  addHeader(L, cfg.dr, isGRP ? 'CVO — Pull GRP-CSV' : 'CVO — No Pull');
+  addHeader(L, cfg.dr, isGRP ? 'CVO : Pull GRP-CSV' : 'CVO : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
 
@@ -157,7 +157,7 @@ function generateCrashVehicleCombo() {
   const isGRP      = pullMethod === 'grpcsv';
   const L = [];
 
-  addHeader(L, cfg.dr, isGRP ? 'Crash + Vehicle — Pull GRP-CSV' : 'Crash + Vehicle — No Pull');
+  addHeader(L, cfg.dr, isGRP ? 'Crash + Vehicle : Pull GRP-CSV' : 'Crash + Vehicle : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
 
@@ -181,7 +181,7 @@ function generateCrashOccupantCombo() {
   const isGRP      = pullMethod === 'grpcsv';
   const L = [];
 
-  addHeader(L, cfg.dr, isGRP ? 'Crash + Occupant — Pull GRP-CSV' : 'Crash + Occupant — No Pull');
+  addHeader(L, cfg.dr, isGRP ? 'Crash + Occupant : Pull GRP-CSV' : 'Crash + Occupant : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
 
@@ -204,7 +204,7 @@ function generateVehicleOccupantCombo() {
   const isGRP      = pullMethod === 'grpcsv';
   const L = [];
 
-  addHeader(L, cfg.dr, isGRP ? 'Vehicle + Occupant — Pull GRP-CSV' : 'Vehicle + Occupant — No Pull');
+  addHeader(L, cfg.dr, isGRP ? 'Vehicle + Occupant : Pull GRP-CSV' : 'Vehicle + Occupant : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
 
@@ -233,7 +233,7 @@ function generateVehicle() {
     const bodyStyles  = document.getElementById('vehBodyStyles').value.trim().split(/[\s,]+/).filter(Boolean);
     const countyCodes = document.getElementById('vehCountyCodes').value.trim().split(/[\s,]+/).filter(Boolean);
 
-    addHeader(L, cfg.dr, 'Vehicle Query — Body Style + County Filter');
+    addHeader(L, cfg.dr, 'Vehicle Query : Body Style + County Filter');
     L.push("%include '" + cfg.macroPath + "';");
     L.push('');
     L.push('%my(veh1, l=veh, y=' + cfg.yRange + ');');
@@ -262,7 +262,7 @@ function generateVehicle() {
     const filterVal  = getFilterValue('veh');
     const whereArg   = buildWhere(filterType, filterVal, cfg.dateWhere);
 
-    addHeader(L, cfg.dr, 'Vehicle — No Pull');
+    addHeader(L, cfg.dr, 'Vehicle : No Pull');
     L.push("%include '" + cfg.macroPath + "';");
     L.push('');
     L.push('%my(veh, l=veh, y=' + cfg.yRange + whereArg + ');');
@@ -279,7 +279,7 @@ function generateVehicle() {
 
 
 /* ═══════════════════════════════════════════════════════════
-   SPECIAL FILTERS — dispatcher
+  SPECIAL FILTERS : dispatcher
    Reads the selected radio and calls the right function below
 ═══════════════════════════════════════════════════════════ */
 function generateSpecial() {
@@ -304,7 +304,7 @@ function generateMotorcycles() {
   const cfg = getConfig();
   const L = [];
 
-  addHeader(L, cfg.dr, 'Special — Motorcycles Only (CVO)');
+  addHeader(L, cfg.dr, 'Special : Motorcycles Only (CVO)');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
   L.push('/* Load crash data: crashes where a motorcycle was involved */');
@@ -360,7 +360,7 @@ function generateAnimals() {
   const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
   const L = [];
 
-  addHeader(L, cfg.dr, 'Special — All Animals Involved');
+  addHeader(L, cfg.dr, 'Special : All Animals Involved');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
   L.push('/* class=9: animal crash classification; fhe=82: animal as first harmful event */');
@@ -391,7 +391,7 @@ function generateFindRoads() {
   const whereArg = county ? ', where=(county=' + county + ')' : '';
   const L = [];
 
-  addHeader(L, cfg.dr, 'Special — Find Roads by Name/Number');
+  addHeader(L, cfg.dr, 'Special : Find Roads by Name/Number');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
   L.push('%my(crash, l=crash, y=' + cfg.yRange + whereArg + '); run;');
@@ -435,7 +435,7 @@ function generateQuickUCR() {
   const ucrs = raw.split('\n').map(u => u.trim()).filter(Boolean);
   const L    = [];
 
-  addHeader(L, cfg.dr, 'Special — Get Specific UCR Numbers');
+  addHeader(L, cfg.dr, 'Special : Get Specific UCR Numbers');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
   L.push('%my(allcrash, l=crash, y=' + cfg.yRange + ');');
@@ -478,7 +478,7 @@ function generateOccupant() {
   const whereArg   = buildWhere(filterType, filterVal, cfg.dateWhere);
   const L = [];
 
-  addHeader(L, cfg.dr, 'Occupant — No Pull');
+  addHeader(L, cfg.dr, 'Occupant : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
   L.push('%my(occ, l=occ, y=' + cfg.yRange + whereArg + ');');
@@ -503,7 +503,7 @@ function generateVehicleOccupant() {
   const whereArg   = buildWhere(filterType, filterVal, cfg.dateWhere);
   const L = [];
 
-  addHeader(L, cfg.dr, 'Vehicle + Occupant — No Pull');
+  addHeader(L, cfg.dr, 'Vehicle + Occupant : No Pull');
   L.push("%include '" + cfg.macroPath + "';");
   L.push('');
 

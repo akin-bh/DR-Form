@@ -1,5 +1,5 @@
 /*
- * js/ui.js — UI interactions, tab switching, copy, download
+ * js/ui.js : UI interactions, tab switching, copy, download
  * ===========================================================
  * Edit this file when:
  *   - Adding a new tab
@@ -123,7 +123,7 @@ function renderPickerTags(prefix) {
   const tagsDiv = document.getElementById(prefix + 'PickerTags');
   if (!state || !tagsDiv) return;
   if (state.items.length === 0) {
-    tagsDiv.innerHTML = '<span class="picker-empty">None selected yet — type to search above</span>';
+    tagsDiv.innerHTML = '<span class="picker-empty">None selected yet : type to search above</span>';
     return;
   }
   tagsDiv.innerHTML = state.items.map(i =>
@@ -310,7 +310,7 @@ function copyCode() {
   const code = document.getElementById('codeOutput').textContent;
   const btns = document.querySelectorAll('.output-actions .btn');
   navigator.clipboard.writeText(code).then(function() {
-    btns[0].textContent = '✓ Copied!';
+    btns[0].textContent = 'Copied!';
     setTimeout(function() { btns[0].innerHTML = '&#128203; Copy to clipboard'; }, 2000);
   }).catch(function() {
     alert('Auto-copy not available in this browser.\nPlease click inside the code box and press Ctrl+A, then Ctrl+C.');

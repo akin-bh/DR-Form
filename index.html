@@ -22,7 +22,7 @@
   </header>
 
   <!-- ═══════════════════════════════════════════════
-       COMMON CONFIG — shown on every tab
+      COMMON CONFIG : shown on every tab
        Edit: index.html (add fields here)
              styles.css (change layout)
   ════════════════════════════════════════════════ -->
@@ -34,7 +34,7 @@
       </div>
       <div class="field">
         <label>Output folder path</label>
-        <input type="text" id="drFolder" placeholder="R:\DR-2847-Smith">
+        <input type="text" id="drFolder" placeholder="R:\djacobs\DR1234_Desc">
       </div>
       <div class="field">
         <label>Year range</label>
@@ -101,12 +101,12 @@
       <div class="field adv-field">
         <label>Select macro file</label>
         <select id="macroPreset" onchange="macroPresetChange()">
-          <option value="standard">DR_Data_Macros.sas &mdash; standard (%link_appendloc for crash reports)</option>
+          <option value="standard">DR_Data_Macros.sas : standard (%link_appendloc for crash reports)</option>
           <option value="noreview">No review needed (%NoReviewNeeded_macro)</option>
           <option value="custom">Custom path&hellip;</option>
         </select>
         <input type="text" id="macroPath" value="A:\TRUAnalysis\request\Templates\Templates_SAS\DR_Data_Macros.sas" style="margin-top:6px;">
-        <p class="hint" id="macroHint">Standard macro file — crash data will include <code>%link_appendloc;</code> to build the Links field.</p>
+        <p class="hint" id="macroHint">Standard macro file : crash data will include <code>%link_appendloc;</code> to build the Links field.</p>
         <div id="customMacroSection" style="display:none; margin-top:10px;">
           <label>Optional custom crash macros</label>
           <textarea id="customMacroLines" rows="3" placeholder="drop %crash_drop_macro;\n%link_appendloc;"></textarea>
@@ -117,7 +117,7 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════
-       TABS — one per request category
+      TABS : one per request category
        To add a new tab: add a <button> here AND a
        matching <section id="tab-YOURNAME"> below
   ════════════════════════════════════════════════ -->
@@ -139,7 +139,7 @@
         <span class="section-label">Pull method</span>
         <div class="radio-col">
           <label class="radio-opt"><input type="radio" name="crashPull" value="nopull" checked onchange="crashPullChange()">
-            No pull — direct query by year and optional filter</label>
+            No pull : direct query by year and optional filter</label>
           <label class="radio-opt"><input type="radio" name="crashPull" value="csv" onchange="crashPullChange()">
             Pull from CSV list &nbsp;<span class="chip">UCRnumber + Year</span></label>
           <label class="radio-opt"><input type="radio" name="crashPull" value="dbf" onchange="crashPullChange()">
@@ -150,9 +150,9 @@
       </div>
 
       <div id="crashFilterSection" class="field filter-section">
-        <span class="section-label">Filter <span class="note">(No-pull only — disabled for pull methods)</span></span>
+        <span class="section-label">Filter <span class="note">(No-pull only : disabled for pull methods)</span></span>
         <select id="crashFilter" onchange="crashFilterChange()">
-          <option value="none">No filter — all crashes in year range</option>
+          <option value="none">No filter : all crashes in year range</option>
           <option value="county">Filter by county codes</option>
           <option value="city">Filter by city codes</option>
           <option value="animals">All animals involved (class=9 or fhe=82)</option>
@@ -174,7 +174,7 @@
         </div>
       </div>
 
-      <button class="btn btn-primary" onclick="generate('crash')">&#9654; Generate SAS code</button>
+      <button class="btn btn-primary" onclick="generate('crash')"> Generate SAS code</button>
     </section>
 
     <!-- ═══════════════ CVO TAB ══════════════════════ -->
@@ -199,7 +199,7 @@
         <span class="section-label">Pull method</span>
         <div class="radio-col">
           <label class="radio-opt"><input type="radio" name="cvoPull" value="nopull" checked onchange="cvoPullChange()">
-            No pull — direct query by year and optional filter</label>
+            No pull : direct query by year and optional filter</label>
           <label class="radio-opt"><input type="radio" name="cvoPull" value="grpcsv" onchange="cvoPullChange()">
             Pull from GRP-CSV &nbsp;<span class="chip">UCRnumber + Year + GRP</span></label>
         </div>
@@ -208,7 +208,7 @@
       <div id="cvoCrashFilterSection" class="field filter-section">
         <span class="section-label">Filter <span class="note">(No-pull only)</span></span>
         <select id="cvoFilter" onchange="cvoFilterChange()">
-          <option value="none">No filter — all crashes in year range</option>
+          <option value="none">No filter : all crashes in year range</option>
           <option value="county">Filter by county codes</option>
           <option value="city">Filter by city codes</option>
           <option value="custom">Custom WHERE clause</option>
@@ -230,9 +230,9 @@
       </div>
 
       <div id="cvoOccFilterSection" class="field filter-section" style="display:none;">
-        <span class="section-label">Filter <span class="note">(Vehicle + Occupant only — no-pull)</span></span>
+        <span class="section-label">Filter <span class="note">(Vehicle + Occupant only : no-pull)</span></span>
         <select id="cvoOccFilter" onchange="cvoOccFilterChange()">
-          <option value="none">No filter — all occupants in year range</option>
+          <option value="none">No filter : all occupants in year range</option>
           <option value="county">Filter by county codes</option>
           <option value="city">Filter by city codes</option>
           <option value="custom">Custom WHERE clause</option>
@@ -284,7 +284,7 @@
       <div id="vehStandardFilter" class="field filter-section">
         <span class="section-label">Filter <span class="note">(Standard No-pull only)</span></span>
         <select id="vehFilter" onchange="vehFilterChange()">
-          <option value="none">No filter — all vehicles in year range</option>
+          <option value="none">No filter : all vehicles in year range</option>
           <option value="county">Filter by county codes</option>
           <option value="city">Filter by city codes</option>
           <option value="custom">Custom WHERE clause</option>
@@ -323,7 +323,7 @@
       <div id="occFilterSection" class="field filter-section">
         <span class="section-label">Filter</span>
         <select id="occFilter" onchange="occFilterChange()">
-          <option value="none">No filter — all occupants in year range</option>
+          <option value="none">No filter : all occupants in year range</option>
           <option value="county">Filter by county codes</option>
           <option value="city">Filter by city codes</option>
           <option value="custom">Custom WHERE clause</option>
@@ -367,7 +367,7 @@
 
       <div id="findRoadsSection" style="display:none;">
         <div class="field">
-          <span class="section-label">County code <span class="note">(optional — leave blank to search all counties)</span></span>
+          <span class="section-label">County code <span class="note">(optional : leave blank to search all counties)</span></span>
           <input type="text" id="roadCounty" placeholder="25">
         </div>
         <div class="field">
@@ -389,11 +389,11 @@
   </main>
 
   <!-- ═══════════════════════════════════════════════
-       OUTPUT — generated code and action buttons
+      OUTPUT : generated code and action buttons
   ════════════════════════════════════════════════ -->
   <section id="outputSection" style="display:none;" class="output-section">
     <div class="output-header">
-      <span class="output-title">Generated SAS code &mdash; ready to paste into SAS</span>
+      <span class="output-title">Generated SAS code : ready to paste into SAS</span>
       <span class="output-badge" id="outputBadge"></span>
       <div class="output-actions">
         <button class="btn" onclick="copyCode()">&#128203; Copy to clipboard</button>
