@@ -8,6 +8,33 @@
 </head>
 <body>
 <div class="app site-shell">
+  <!--
+    index.html : Front-end for the DR SAS Code Generator
+    ----------------------------------------------------
+    Purpose: lightweight UI that collects request parameters and
+    produces SAS scripts via the generator functions in js/templates.js.
+
+    Key developer notes:
+    - The form fields are read by `js/helpers.js` and `js/ui.js` via
+      their element IDs (examples below). Keep IDs in sync when editing.
+    - Primary generator entry points are called from buttons that run
+      `generate(type)` in `js/ui.js`. Template implementations live in
+      `js/templates.js` and use helpers in `js/helpers.js`.
+
+    Important element IDs (referenced by JS):
+      - drNum, drFolder, yearStart, yearEnd
+      - useDateRange, monthStart, dayStart, monthEnd, dayEnd
+      - outFmt (radio name), macroPreset, macroPath, customMacroLines
+      - <tab>Filter selects and inputs: crashFilter, crashFilterVal, crashPicker
+      - codeOutput (pre where generated code is written)
+      - outputBadge (text summary of outputs)
+
+    To add a new request tab:
+      1) Add a <button class="tab" data-tab="yourname"> in the nav
+      2) Add a matching <section id="tab-yourname"> with controls
+      3) Add a generator function in `js/templates.js` and call it from
+         `generate(type)` (use a new `type` string)
+  -->
 
   <header class="site-header">
     <div class="site-brand">

@@ -13,6 +13,11 @@
 /* ═══════════════════════════════════════════════════════════
    TAB SWITCHING
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Switch visible tab in the UI.
+ * Hides all tab panels and marks the selected tab/panel as active.
+ * @param {string} name - tab identifier (e.g. 'crash', 'cvo')
+ */
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -26,6 +31,10 @@ function switchTab(name) {
    DATE RANGE TOGGLE
    Shows/hides month+day inputs when the checkbox is checked.
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Toggle visibility of the month/day inputs when the date-range checkbox
+ * is checked or unchecked.
+ */
 function toggleDateRange() {
   const on = document.getElementById('useDateRange').checked;
   document.getElementById('dateRangeExtras').style.display = on ? 'block' : 'none';
@@ -44,6 +53,11 @@ const MACRO_PRESETS = {
   custom:   { file: null, hint: 'Custom path : edit the path field below.' },
 };
 
+/**
+ * Update the macro path input and help hint when a preset is selected.
+ * Presets are defined in `MACRO_PRESETS` and may fill the path field
+ * or reveal the custom-macro UI when 'custom' is picked.
+ */
 function macroPresetChange() {
   const sel    = document.getElementById('macroPreset').value;
   const inp    = document.getElementById('macroPath');
@@ -62,8 +76,17 @@ function macroPresetChange() {
    Tag-based search component for county and city filters.
    pickerState[prefix] = { type:'county'|'city', items:[{code,name}] }
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Picker state holds the selected items for lookup pickers.
+ * pickerState[prefix] = { type:'county'|'city', items:[{code,name}] }
+ */
 const pickerState = {};
 
+/**
+ * Initialize a lookup picker control for the given prefix.
+ * @param {string} prefix - control prefix (e.g. 'crash', 'veh')
+ * @param {'county'|'city'} type - which lookup table to use
+ */
 function initPicker(prefix, type) {
   pickerState[prefix] = { type: type, items: [] };
   renderPickerTags(prefix);
@@ -71,6 +94,11 @@ function initPicker(prefix, type) {
   document.getElementById(prefix + 'PickerDropdown').style.display = 'none';
 }
 
+/**
+ * Search the lookup table for a query string and populate the
+ * dropdown with matching county/city options.
+ * @param {string} prefix - control prefix
+ */
 function pickerSearch(prefix) {
   const inp   = document.getElementById(prefix + 'PickerSearch');
   const drop  = document.getElementById(prefix + 'PickerDropdown');
@@ -98,6 +126,13 @@ function pickerSearch(prefix) {
   drop.style.display = 'block';
 }
 
+/**
+ * Add the chosen lookup item to pickerState and re-render tags.
+ * Called from the dropdown option click.
+ * @param {string} prefix
+ * @param {number} code
+ * @param {string} name
+ */
 function pickerSelect(prefix, code, name) {
   const state = pickerState[prefix];
   if (!state) return;
@@ -111,6 +146,11 @@ function pickerSelect(prefix, code, name) {
   inp.focus();
 }
 
+/**
+ * Remove a previously selected lookup code from the picker state.
+ * @param {string} prefix
+ * @param {number} code
+ */
 function pickerRemove(prefix, code) {
   const state = pickerState[prefix];
   if (!state) return;
@@ -118,6 +158,11 @@ function pickerRemove(prefix, code) {
   renderPickerTags(prefix);
 }
 
+/**
+ * Render compact tags for selected lookup items in the UI.
+ * Shows a friendly name and a remove button for each selection.
+ * @param {string} prefix
+ */
 function renderPickerTags(prefix) {
   const state   = pickerState[prefix];
   const tagsDiv = document.getElementById(prefix + 'PickerTags');
@@ -135,6 +180,12 @@ function renderPickerTags(prefix) {
   ).join('');
 }
 
+/**
+ * Return space-separated numeric codes for selected picker items.
+ * Used by templates when building WHERE clauses for county/city filters.
+ * @param {string} prefix
+ * @returns {string} e.g. '4 18'
+ */
 function getPickerValue(prefix) {
   const state = pickerState[prefix];
   if (!state || state.items.length === 0) return '';
@@ -144,6 +195,11 @@ function getPickerValue(prefix) {
 /**
  * Smart getter called by templates.js for the filter value.
  * Returns picker codes for county/city, text input value for custom.
+ */
+/**
+ * Smart getter called by templates.js for the filter value.
+ * Returns picker codes for county/city, text input value for custom.
+ * @param {string} prefix
  */
 function getFilterValue(prefix) {
   const filterType = document.getElementById(prefix + 'Filter').value;
@@ -224,6 +280,13 @@ function specialTypeChange() {
 /* ═══════════════════════════════════════════════════════════
    MAIN GENERATE FUNCTION
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Main entry called when user clicks Generate. Dispatches to the
+ * appropriate template generator, displays the generated code, and
+ * updates the status badge that explains how many files will be produced.
+ *
+ * @param {string} type - 'crash'|'cvo'|'vehicle'|'occupant'|'special'
+ */
 function generate(type) {
   const errors = validateInputs(type);
   if (errors.length > 0) {
@@ -271,6 +334,12 @@ function generate(type) {
 /* ═══════════════════════════════════════════════════════════
    INPUT VALIDATION
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Validate the visible form inputs for required fields and range logic.
+ * Returns an array of human-friendly error messages (empty when valid).
+ * @param {string} type - used if validations differ by tab (not heavily used)
+ * @returns {string[]} list of error messages
+ */
 function validateInputs(type) {
   const errors     = [];
   const drNum      = document.getElementById('drNum').value.trim();
@@ -306,6 +375,11 @@ function validateInputs(type) {
 /* ═══════════════════════════════════════════════════════════
    COPY TO CLIPBOARD
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Copy the generated code to the clipboard and show a brief 'Copied!'
+ * message on the first output button. Falls back to manual copy instructions
+ * when the Clipboard API is unavailable.
+ */
 function copyCode() {
   const code = document.getElementById('codeOutput').textContent;
   const btns = document.querySelectorAll('.output-actions .btn');
@@ -321,6 +395,9 @@ function copyCode() {
 /* ═══════════════════════════════════════════════════════════
    DOWNLOAD AS .sas FILE
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Download the generated code as a .sas file using an anchor/Blob.
+ */
 function downloadCode() {
   const dr   = document.getElementById('drNum').value.trim() || 'DR';
   const code = document.getElementById('codeOutput').textContent;
@@ -337,12 +414,22 @@ function downloadCode() {
    SHARED HELPERS
 ═══════════════════════════════════════════════════════════ */
 
+/**
+ * Enable/disable a whole settings section by changing opacity and
+ * pointer events. This is used to grey out input groups when their
+ * controlling radio/checkbox indicates they are not active.
+ */
 function toggleSection(sectionId, enabled) {
   const el = document.getElementById(sectionId);
   el.style.opacity       = enabled ? '1'  : '0.35';
   el.style.pointerEvents = enabled ? ''   : 'none';
 }
 
+/**
+ * Show the right input based on the selected filter type.
+ * county/city  → lookup picker
+ * custom       → plain text input
+ */
 /**
  * Show the right input based on the selected filter type.
  * county/city  → lookup picker

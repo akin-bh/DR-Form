@@ -18,6 +18,12 @@
    CRASH ONLY
    Template variants: NoPull / Pull CSV / Pull DBF / Pull GRP-CSV
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Generate SAS code for the Crash-only template.
+ * Chooses between NoPull / Pull CSV / Pull DBF / Pull GRP-CSV variants
+ * based on UI selections and returns the full script as a string.
+ * @returns {string} generated SAS code
+ */
 function generateCrash() {
   const cfg        = getConfig();
   const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
@@ -64,6 +70,11 @@ function generateCrash() {
    CVO COMBINATIONS
    Crash + Vehicle + Occupant / Crash + Vehicle / Crash + Occupant / Vehicle + Occupant
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Dispatch generator for CVO combinations (Crash/Vehicle/Occupant).
+ * Uses the selected mode to call the appropriate combo function.
+ * @returns {string} generated SAS code for selected CVO combination
+ */
 function generateCVO() {
   const mode = document.querySelector('[name=cvoMode]:checked').value;
   if (mode === 'crashveh') return generateCrashVehicleCombo();
@@ -223,6 +234,12 @@ function generateVehicleOccupantCombo() {
    VEHICLE
    Template variants: Standard NoPull / Body Style Query / Crash+Veh DBF
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Generate SAS code for the Vehicle-only template. Supports a
+ * body-style query mode (filtered by body styles and counties)
+ * as well as a standard NoPull mode.
+ * @returns {string} generated SAS code
+ */
 function generateVehicle() {
   const cfg     = getConfig();
   const vehType = document.querySelector('[name=vehType]:checked').value;
@@ -282,6 +299,11 @@ function generateVehicle() {
   SPECIAL FILTERS : dispatcher
    Reads the selected radio and calls the right function below
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Dispatcher for special templates (motorcycles, animals, findroads, quickucr).
+ * Reads the UI radio and calls the matching generator function.
+ * @returns {string} generated SAS code or a comment for unknown type
+ */
 function generateSpecial() {
   const specialType = document.querySelector('[name=specialType]:checked').value;
 
@@ -300,6 +322,11 @@ function generateSpecial() {
    CVO with MC/MP body style filter. Removes ATVs from crash data.
    Source template: DRTemplate_MY_CVO_NOPULL_MotorcyclesOnly.sas
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Special: Motorcycles-only CVO variant. Filters crash/vehicle/occupant
+ * data to include only motorcycle body styles and removes ATV-only crashes.
+ * @returns {string} generated SAS code
+ */
 function generateMotorcycles() {
   const cfg = getConfig();
   const L = [];
@@ -355,6 +382,11 @@ function generateMotorcycles() {
    Crash data where class=9 or fhe=82
    Source template: DRTemplate_MY_Crash_NOPULL_AllAnimals.sas
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Special: All animal-involved crashes. Builds a crash dataset where
+ * class=9 or fhe=82 and exports the usual output.
+ * @returns {string} generated SAS code
+ */
 function generateAnimals() {
   const cfg = getConfig();
   const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';
@@ -382,6 +414,11 @@ function generateAnimals() {
    Useful for finding non-geocoded or pre-2010 crash locations.
    Source template: DRTemplate_MY_Crash_NOPULL_Find-Roads.sas
 ═══════════════════════════════════════════════════════════ */
+/**
+ * Special: Find roads. Searches several address fields for provided
+ * keywords and is useful when locations are incomplete or historical.
+ * @returns {string} generated SAS code
+ */
 function generateFindRoads() {
   const cfg      = getConfig();
   const customCrashMacros = cfg.macroPreset === 'custom' ? cfg.customMacros : '';

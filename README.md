@@ -56,3 +56,17 @@ Every time you save a file, the browser refreshes automatically.
 | Add a new filter toggle              | js/ui.js              |
 | Change copy/download behavior        | js/ui.js              |
 | Add a new WHERE clause type          | js/helpers.js         |
+
+
+---
+
+## Code documentation
+
+- **Inline comments & JSDoc:** Major functions in `js/helpers.js`,
+    `js/templates.js`, and `js/ui.js` include descriptive comments and
+    JSDoc-style annotations to explain inputs, outputs and side-effects.
+- **Lookup tables:** `js/lookups.js` contains `COUNTIES` and `CITIES`
+    arrays used by the picker UI; each entry is `{code, name}`.
+
+If you are a developer editing generators, read the header comments
+at the top of each `js/*.js` file: they explain where to make changes.

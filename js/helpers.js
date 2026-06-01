@@ -16,6 +16,12 @@
 /* ── Year conversion ─────────────────────────────────────
    SAS %my() uses 2-digit years (e.g. 2023 → '23')
 ──────────────────────────────────────────────────────── */
+/**
+ * Convert a year number to a 2-digit string used by SAS `%my()` macro.
+ * Examples: 2023 -> '23', 7 -> '07'. Returns '??' for falsy input.
+ * @param {number|string} y - full year or numeric-like string
+ * @returns {string} two-digit year string
+ */
 function twoDigit(y) {
   if (!y) return '??';
   return String(parseInt(y)).slice(-2).padStart(2, '0');
@@ -25,6 +31,13 @@ function twoDigit(y) {
 /* ── Read all common config values from the form ─────────
    Returns an object used by every template generator.
 ──────────────────────────────────────────────────────── */
+/**
+ * Read form inputs and return a configuration object used by generators.
+ * The returned object contains DR metadata, output format settings, year
+ * range (SAS 2-digit style), macro paths/presets, and any optional
+ * date-range WHERE clause ready for insertion into generated code.
+ * @returns {Object} configuration for template generation
+ */
 function getConfig() {
   const outFmt = document.querySelector('[name=outFmt]:checked').value;
   const ys = parseInt(document.getElementById('yearStart').value) || 0;
@@ -72,6 +85,17 @@ function getConfig() {
   dateWhere:  optional date condition from getConfig().dateWhere
           e.g. "crashdate >= '15JAN2020'd and crashdate <= '31MAR2024'd"
 ──────────────────────────────────────────────────────── */
+/**
+ * Build a SAS WHERE string fragment for the `%my()` macro based on the
+ * selected filter type and input value. Returns an empty string when
+ * no filters apply. This is intended for use only with the nopull
+ * generation path (where we embed WHERE directly into %my()).
+ *
+ * @param {string} filterType - 'none'|'county'|'city'|'animals'|'custom'
+ * @param {string} value - raw input (space/comma separated codes or custom expr)
+ * @param {string} [dateWhere] - optional date clause produced by getConfig()
+ * @returns {string} formatted ",\n  where=(...)" fragment or ''
+ */
 function buildWhere(filterType, value, dateWhere) {
   const conditions = [];
 
@@ -111,6 +135,15 @@ function buildWhere(filterType, value, dateWhere) {
     whereArg:   output of buildWhere() : only used for nopull
    }
 ──────────────────────────────────────────────────────── */
+/**
+ * Add dataset load and sort statements to the code array `L`.
+ * Supports two modes: `nopull` (use local library) or pull-from-file
+ * (CSV/DBF/GRP CSV) where an `import` dataset is merged with the
+ * full library table. `finalSort` controls the later `proc sort`.
+ *
+ * @param {string[]} L - array of code lines to append to
+ * @param {Object} params - see function body for expected keys
+ */
 function loadDS(L, params) {
   const { name, lib, finalSort, pullMethod, yRange, whereArg } = params;
 
@@ -140,6 +173,17 @@ function loadDS(L, params) {
                           'no'  = drop AppendLoc+Links via %NoReviewNeeded_macro
                           omit  = leave as-is (non-crash datasets)
 ──────────────────────────────────────────────────────── */
+/**
+ * Add retain/format/drop RUN block for a dataset to `L`.
+ * `prefix` maps to macro names like `%crash_retain_macro` and friends.
+ * When `links==='yes'` the `%link_appendloc;` macro line is included.
+ *
+ * @param {string[]} L - code lines array
+ * @param {string} name - dataset name (e.g. 'crash')
+ * @param {string} prefix - macro prefix (e.g. 'crash')
+ * @param {string} links - 'yes'|'no'|omit
+ * @param {string} customMacros - custom macro lines to insert
+ */
 function fmtDS(L, name, prefix, links, customMacros) {
   L.push('data ' + name + ';');
   L.push('  retain %' + prefix + '_retain_macro;');
@@ -164,6 +208,14 @@ function fmtDS(L, name, prefix, links, customMacros) {
 /* ── Add PROC EXPORT lines to code array L ───────────────
    params = { name, suffix, folder, dr, ext, dbms }
 ──────────────────────────────────────────────────────── */
+/**
+ * Append PROC EXPORT calls to `L` for exporting the named dataset.
+ * Parameters control filename suffix, destination folder, DR number,
+ * file extension and DBMS option used by PROC EXPORT.
+ *
+ * @param {string[]} L - code lines array
+ * @param {Object} params - { name, suffix, folder, dr, ext, dbms }
+ */
 function expDS(L, params) {
   const { name, suffix, folder, dr, ext, dbms } = params;
   L.push('PROC EXPORT DATA=' + name);
@@ -176,6 +228,14 @@ function expDS(L, params) {
    pullMethod: 'csv' | 'grpcsv' | 'dbf'
    hasGRP:     true if importing GRP column too
 ──────────────────────────────────────────────────────── */
+/**
+ * Create an import block for reading the list of UCR numbers from CSV
+ * or DBF depending on `pullMethod`. Appends the import and sort
+ * statements to `L` so templates can merge with library tables.
+ *
+ * @param {string[]} L - code lines array
+ * @param {Object} params - { pullMethod, folder, dr, hasGRP }
+ */
 function importBlock(L, params) {
   const { pullMethod, folder, dr, hasGRP } = params;
 
@@ -206,6 +266,15 @@ function importBlock(L, params) {
 
 
 /* ── Add the standard comment header to code array L ─────  */
+/**
+ * Add top-of-file human-readable header used in every generated SAS script.
+ * This helps reviewers quickly identify the DR number and which template
+ * produced the script.
+ *
+ * @param {string[]} L - code lines array
+ * @param {string} dr - DR identifier string
+ * @param {string} templateName - human friendly template name
+ */
 function addHeader(L, dr, templateName) {
   L.push('/* ==============================================');
   L.push('   Data Request : ' + dr);

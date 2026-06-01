@@ -1,5 +1,11 @@
-/* js/lookups.js 
- here are all the NM county and city code tables */
+/* js/lookups.js
+ * Lookup tables for New Mexico county and city numeric codes.
+ *
+ * These constants are used by the UI picker component in `js/ui.js`.
+ * Each entry is an object with { code: <number>, name: <string> }.
+ * The picker presents friendly names and inserts space-separated
+ * numeric codes into WHERE expressions when building templates.
+ */
 
 const COUNTIES = [
   {code:1, name:'Bernalillo'},
