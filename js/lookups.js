@@ -1,4 +1,5 @@
-/* js/lookups.js — NM county and city code tables */
+/* js/lookups.js 
+ here are all the NM county and city code tables */
 
 const COUNTIES = [
   {code:1, name:'Bernalillo'},

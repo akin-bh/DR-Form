@@ -39,9 +39,9 @@ const MACRO_BASE = 'A:\\TRUAnalysis\\request\\Templates\\Templates_SAS\\';
 const MACRO_STANDARD_FILE = 'DR_Data_Macros.sas';
 
 const MACRO_PRESETS = {
-  standard: { file: MACRO_STANDARD_FILE, hint: 'Standard macro file — crash data will include <code>%link_appendloc;</code> to build the Links field.' },
-  noreview: { file: MACRO_STANDARD_FILE, hint: 'No review needed — crash data will use <code>drop %NoReviewNeeded_macro;</code> to remove AppendLoc &amp; Links.' },
-  custom:   { file: null, hint: 'Custom path — edit the path field below.' },
+  standard: { file: MACRO_STANDARD_FILE, hint: 'Standard macro file : crash data will include <code>%link_appendloc;</code> to build the Links field.' },
+  noreview: { file: MACRO_STANDARD_FILE, hint: 'No review needed : crash data will use <code>drop %NoReviewNeeded_macro;</code> to remove AppendLoc &amp; Links.' },
+  custom:   { file: null, hint: 'Custom path : edit the path field below.' },
 };
 
 function macroPresetChange() {
@@ -284,8 +284,10 @@ function validateInputs(type) {
   if (!yearEnd   || isNaN(yearEnd))   errors.push('• End year is required');
   if (yearStart && yearEnd && yearStart > yearEnd)
     errors.push('• Start year cannot be after end year');
-  if (yearStart < 1990 || yearEnd > 2099)
-    errors.push('• Year range looks unusual — please double-check');
+  if ((yearStart && yearStart < 1999) || (yearEnd && yearEnd < 1999))
+    errors.push('• Crash records of this date are not in our database');
+  if (yearEnd > 2099)
+    errors.push('• Year range looks unusual. Please double-check');
 
   if (document.getElementById('useDateRange').checked) {
     const ms = document.getElementById('monthStart').value;
