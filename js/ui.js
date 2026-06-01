@@ -381,14 +381,19 @@ function validateInputs(type) {
  * when the Clipboard API is unavailable.
  */
 function copyCode() {
-  const code = document.getElementById('codeOutput').textContent;
+  const code = getClipboardText();
   const btns = document.querySelectorAll('.output-actions .btn');
-  navigator.clipboard.writeText(code).then(function() {
-    btns[0].textContent = 'Copied!';
-    setTimeout(function() { btns[0].innerHTML = '&#128203; Copy to clipboard'; }, 2000);
-  }).catch(function() {
-    alert('Auto-copy not available in this browser.\nPlease click inside the code box and press Ctrl+A, then Ctrl+C.');
-  });
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(function() {
+      btns[0].textContent = 'Copied!';
+      setTimeout(function() { btns[0].innerHTML = '&#128203; Copy to clipboard'; }, 2000);
+    }).catch(function() {
+      fallbackCopy(code, btns);
+    });
+    return;
+  }
+
+  fallbackCopy(code, btns);
 }
 
 
@@ -423,6 +428,48 @@ function toggleSection(sectionId, enabled) {
   const el = document.getElementById(sectionId);
   el.style.opacity       = enabled ? '1'  : '0.35';
   el.style.pointerEvents = enabled ? ''   : 'none';
+}
+
+/**
+ * Return clipboard-safe text for SAS paste operations.
+ * Removes non-ASCII characters, standardizes line endings, and keeps
+ * the payload as plain text so the clipboard contains a basic text form.
+ * @returns {string}
+ */
+function getClipboardText() {
+  const raw = document.getElementById('codeOutput').textContent || '';
+  return raw
+    .replace(/\r\n?/g, '\n')
+    .normalize('NFKD')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '')
+    .replace(/\n/g, '\r\n');
+}
+
+/**
+ * Fallback copy path for browsers that block the async Clipboard API.
+ * Uses a temporary textarea so the browser still copies plain text.
+ * @param {string} text
+ * @param {NodeListOf<HTMLButtonElement>} btns
+ */
+function fallbackCopy(text, btns) {
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.setAttribute('readonly', '');
+  temp.style.position = 'fixed';
+  temp.style.left = '-9999px';
+  temp.style.top = '0';
+  document.body.appendChild(temp);
+  temp.select();
+
+  try {
+    document.execCommand('copy');
+    btns[0].textContent = 'Copied!';
+    setTimeout(function() { btns[0].innerHTML = '&#128203; Copy to clipboard'; }, 2000);
+  } catch (err) {
+    alert('Auto-copy not available in this browser.\nPlease click inside the code box and press Ctrl+A, then Ctrl+C.');
+  } finally {
+    document.body.removeChild(temp);
+  }
 }
 
 /**
